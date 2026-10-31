@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+# Pre-push hook: forward to the machine's legacy pre-push hook, which runs
+# typecheck, tests and build for this Node project.
+set -uo pipefail
+
+here="$(cd "$(dirname "$0")" && pwd)"
+# shellcheck source=lib.sh
+. "$here/lib.sh"
+
+run_legacy pre-push "$@"

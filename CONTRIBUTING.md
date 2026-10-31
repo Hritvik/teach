@@ -6,7 +6,7 @@ This repository uses GitHub Flow:
 
 - `main` is the canonical, always-deployable branch.
 - Work happens on feature branches and lands through a pull request.
-- Branch names use `feat/`, `fix/`, `docs/`, `test/` or `refactor/` followed by a short slug.
+- Branch names use `feat/`, `fix/`, `docs/`, `test/`, `refactor/` or `chore/` followed by a short slug.
 
 ```sh
 git switch main
@@ -36,6 +36,19 @@ feat(capture): keep inquiry receipts across reconnects
 fix(auth): refuse an owner mismatch before creating a grant
 docs(deploy): record the capture verification steps
 ```
+
+## Local hooks
+
+Install the branch-protection hooks once per clone:
+
+```sh
+git config --local teach.legacyHooksPath "$(git config --global --get core.hooksPath || printf '%s' "$HOME/.codex/git-hooks")"
+git config --local core.hooksPath .githooks
+```
+
+The `pre-commit` hook refuses direct commits to `main` and forwards to the machine's secret scan. The
+`pre-push` hook forwards to the machine's typecheck/test/build checks. See
+[docs/SETUP_BRANCH_PROTECTION.md](docs/SETUP_BRANCH_PROTECTION.md) for the rules and the bypass policy.
 
 ## Pull requests
 

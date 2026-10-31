@@ -1,0 +1,42 @@
+#!/usr/bin/env bash
+# Pre-commit hook: local branch protection (docs/SETUP_BRANCH_PROTECTION.md),
+# then the machine's legacy pre-commit hook (the ECC secret scan).
+set -uo pipefail
+
+here="$(cd "$(dirname "$0")" && pwd)"
+# shellcheck source=lib.sh
+. "$here/lib.sh"
+
+# symbolic-ref first: it also names an unborn branch, so main is protected from
+# commit one. Fall back to abbrev-ref for a detached HEAD.
+BRANCH="$(git symbolic-ref --short HEAD 2>/dev/null \
+  || git rev-parse --abbrev-ref HEAD 2>/dev/null \
+  || echo HEAD)"
+
+# Rule 1: no direct commits to main. A commit that concludes an in-progress
+# merge (MERGE_HEAD) is a pull-request merge being finished locally, not a
+# direct commit, so it stays allowed.
+MERGE_HEAD="$(git rev-parse --git-path MERGE_HEAD 2>/dev/null)"
+if [ "$BRANCH" = "main" ] && [ ! -f "$MERGE_HEAD" ]; then
+  echo "❌ ERROR: Cannot commit directly to main."
+  echo "   Create a feature branch and use a pull request."
+  echo "   See CONTRIBUTING.md for the workflow."
+  exit 1
+fi
+
+# Rule 2: branch naming convention (warning only, not a gate). main is exempt.
+if [ "$BRANCH" != "main" ] && [[ ! "$BRANCH" =~ ^(feat/|fix/|docs/|test/|refactor/|chore/) ]]; then
+  echo "⚠️  WARNING: Branch name doesn't follow convention."
+  echo "   Use: feat/, fix/, docs/, test/, refactor/, or chore/"
+  echo "   Example: feat/capture-reconnect"
+  echo "   Continuing anyway, but consider renaming."
+fi
+
+# Rule 3: staged files that deserve a careful review (warning only).
+STAGED="$(git diff --cached --name-only)"
+if echo "$STAGED" | grep -qE "package.json|wrangler(\.capture)?\.jsonc|migrations/"; then
+  echo "⚠️  WARNING: You're changing package, deployment or migration files."
+  echo "   Ensure these changes are intentional and reviewed."
+fi
+
+run_legacy pre-commit "$@"
