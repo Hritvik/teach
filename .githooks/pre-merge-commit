@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+# Pre-merge-commit hook: a clean merge that lands on main still gets the
+# machine's secret scan. Direct commits are blocked in pre-commit.
+set -uo pipefail
+
+here="$(cd "$(dirname "$0")" && pwd)"
+# shellcheck source=lib.sh
+. "$here/lib.sh"
+
+run_legacy pre-commit "$@"
