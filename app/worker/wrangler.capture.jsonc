@@ -1,0 +1,68 @@
+// Owner-only capture release.
+//
+// `main` is fixed to src/capture.ts: grading, spaced review, model budgets and
+// scheduled inference cannot be enabled by deployment variables or client
+// arguments. The full tutor release keeps its own entrypoint in src/production.ts
+// and is deployed only after the full-release gate in
+// docs/superpowers/plans/2026-10-26-teach-general-build.md passes.
+//
+// Deploy from the repository root with `npm run deploy`. The deploy gate checks
+// the tree, rebuilds the captured bundle and verifies the reviewed release
+// evidence before touching Cloudflare.
+//
+// Secrets are not stored here. `GOOGLE_CLIENT_SECRET` and
+// `CONTROL_SESSION_SECRET` are Worker secrets managed with `wrangler secret`.
+// Everything in `vars` below is non-secret deployment identity.
+{
+  "$schema": "../../node_modules/wrangler/config-schema.json",
+  "name": "teach-mcp",
+  "main": "src/capture.ts",
+  "compatibility_date": "2026-10-01",
+  "compatibility_flags": [
+    "global_fetch_strictly_public"
+  ],
+  "workers_dev": true,
+  "account_id": "23d580020859d2df465d1312f1a07f47",
+  "durable_objects": {
+    "bindings": [
+      {
+        "name": "SECURITY_LEDGER",
+        "class_name": "SecurityLedger"
+      }
+    ]
+  },
+  "migrations": [
+    {
+      "tag": "v1",
+      "new_sqlite_classes": [
+        "SecurityLedger"
+      ]
+    }
+  ],
+  "triggers": {
+    "crons": []
+  },
+  "d1_databases": [
+    {
+      "binding": "LEARNING_DB",
+      "database_name": "teach-capture",
+      "database_id": "25486b3b-1d2d-4058-8eb3-e51ca1bd7844",
+      "migrations_dir": "migrations"
+    }
+  ],
+  "kv_namespaces": [
+    {
+      "binding": "OAUTH_KV",
+      "id": "b0ef45c4dd9945e18ba7c58eb76193f4"
+    }
+  ],
+  "vars": {
+    "TEACH_ORIGIN": "https://teach-mcp.hritvikdinkar.workers.dev",
+    "TEACH_LEARNER_ID": "l_1e09cc7e-c4d1-4eb9-b371-b17cc5758210",
+    "OWNER_EMAIL": "hritvikdinkar@gmail.com",
+    "GOOGLE_SUBJECT": "113203256942632895294",
+    "GOOGLE_CLIENT_ID": "592006837183-ik7q279a09hhqnpupsksd1h18ctbf9u1.apps.googleusercontent.com",
+    "ACCESS_ISSUER": "https://late-frog-bfd8.cloudflareaccess.com",
+    "ACCESS_AUDIENCE": "ebc7980b87b77b003c364b1c68b61a9fdfec09a932a8a123c519e1c1d300f311"
+  }
+}

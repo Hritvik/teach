@@ -1,0 +1,10 @@
+import {build} from 'esbuild';
+import {readFile,mkdir,writeFile} from 'node:fs/promises';
+import {createHash} from 'node:crypto';
+if(process.argv.length!==2)throw new Error('Capture build accepts no entrypoint override');
+await mkdir('dist/capture',{recursive:true});
+await build({entryPoints:['app/worker/src/capture.ts'],bundle:true,format:'esm',platform:'browser',target:'es2023',outfile:'dist/capture/worker.mjs',external:['cloudflare:workers']});
+const source=await readFile('dist/capture/worker.mjs');
+if(/TEACH_DEV_|synthetic-development|development-token/.test(source.toString()))throw new Error('Development runtime in capture bundle');
+await writeFile('dist/capture/manifest.json',JSON.stringify({releaseMode:'capture',entry:'app/worker/src/capture.ts',bundleHash:createHash('sha256').update(source).digest('hex')},null,2)+'\n');
+console.log('Capture entry built. Assessment tools and scheduled inference are disabled by its fixed release mode.');

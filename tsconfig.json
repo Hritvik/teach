@@ -1,0 +1,10 @@
+{
+  "compilerOptions": {
+    "target": "ES2023", "module": "ESNext", "moduleResolution": "Bundler",
+    "strict": true, "noUncheckedIndexedAccess": true, "exactOptionalPropertyTypes": true,
+    "skipLibCheck": true, "noEmit": true, "allowImportingTsExtensions": true,
+    "types": ["node", "@cloudflare/workers-types"],
+    "paths": {"@teach/domain": ["./app/domain/src/index.ts"]}
+  },
+  "include": ["app/**/*.ts", "tests/**/*.ts", "vitest.config.ts"]
+}

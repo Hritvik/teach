@@ -1,0 +1,13 @@
+// Full tutor entrypoint. This is not deployed by `npm run deploy`: it stays
+// behind the full-release gates in
+// docs/superpowers/plans/2026-10-26-teach-general-build.md. The deployed
+// owner-only capture release uses wrangler.capture.jsonc.
+{
+  "$schema": "../../node_modules/wrangler/config-schema.json",
+  "name": "teach",
+  "main": "src/production.ts",
+  "compatibility_date": "2026-10-01",
+  "workers_dev": false,
+  "compatibility_flags": ["global_fetch_strictly_public"],
+  "triggers": {"crons": ["* * * * *"]}
+}
