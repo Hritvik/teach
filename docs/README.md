@@ -7,7 +7,7 @@
 | Build plan | [2026-10-26-teach-general-build.md](superpowers/plans/2026-10-26-teach-general-build.md) | Phases A–D and the full-release exit gates. |
 | Capture release | [2026-10-29-teach-capture-deployment.md](superpowers/plans/2026-10-29-teach-capture-deployment.md) | The current owner-only deployment and its acceptance gate. |
 | Contracts | [contracts/](superpowers/specs/contracts/) | Auth/recovery, data/rules and grading-service contracts. |
-| Runbooks | [runbooks/](runbooks/) | Hosted setup and grading setup. |
+| Runbooks | [runbooks/](runbooks/) | Hosted setup, grading setup and hosted-client verification. |
 | Wayfinder | [map.md](../.scratch/teach-general/map.md) | Completed decision map for the first release. |
 | History | [handover/](../handover/README.md) | Historical state from the earlier Meesho-scoped effort. Not current setup instructions. |
 | Evaluation | [evals/README.md](../evals/README.md) | The grading corpus and how it is used. |

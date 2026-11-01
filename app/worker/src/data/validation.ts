@@ -54,12 +54,16 @@ function assertJson(value: unknown, depth = 0): void {
   if (value && typeof value === 'object' && Object.getPrototypeOf(value) === Object.prototype) { Object.values(value).forEach(entry => assertJson(entry, depth + 1)); return; }
   invalid('Only JSON values are accepted');
 }
+function zodDetail(error: z.ZodError): string {
+  const issues = error.issues.slice(0, 5).map(issue => `${issue.path.length ? issue.path.join('.') : '(root)'}: ${issue.message}`);
+  return issues.length ? `: ${issues.join('; ')}` : '';
+}
 export function parseEnvelope(input: unknown, internal=false): Envelope {
   assertJson(input);
   if (new TextEncoder().encode(JSON.stringify(input)).length > 65536) invalid('Request exceeds 64 KiB');
-  const parsed = envelopeSchema.safeParse(input); if (!parsed.success) invalid('Invalid write envelope');
+  const parsed = envelopeSchema.safeParse(input); if (!parsed.success) invalid(`Invalid write envelope${zodDetail(parsed.error)}`);
   const schema = internal ? internalSchemas[parsed.data.operation] : schemas[parsed.data.operation]; if (!schema) invalid('Unsupported write operation');
-  const data = schema.safeParse(parsed.data.data); if (!data.success) invalid('Invalid operation data');
+  const data = schema.safeParse(parsed.data.data); if (!data.success) invalid(`Invalid operation data${zodDetail(data.error)}`);
   if(parsed.data.operation==='answer'){const answer=(data.data as Row).answer as Row;const content=answer.kind==='free_text'?answer.text:answer;if(new TextEncoder().encode(typeof content==='string'?content:JSON.stringify(content)).length>16384)invalid('Answer exceeds 16 KiB');}
   const { session_id, ...base } = parsed.data;
   return { ...base, ...(session_id ? { session_id } : {}), data: data.data as Row };
