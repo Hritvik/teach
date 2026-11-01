@@ -3,6 +3,7 @@ import type { Context, Plan, Row, SqlEffect } from './types';
 import { canonicalConcept, common, entity, insert, rows, SEQ, update } from './sql';
 import { DataError, invalid } from './errors';
 import { projectionEffects } from './projections';
+import { planConcept } from './entities';
 export async function loadGraph(ctx: Pick<Context, 'db' | 'actor'>): Promise<{ graph: Graph; aimRows: Row[]; linkRows: Row[] }> {
   const [concepts, aims, links] = await Promise.all([rows(ctx.db, 'SELECT id,merged_into FROM concepts WHERE learner_id=?', [ctx.actor.learner_id]), rows(ctx.db, 'SELECT * FROM aims WHERE learner_id=? AND active=1', [ctx.actor.learner_id]), rows(ctx.db, 'SELECT * FROM links WHERE learner_id=?', [ctx.actor.learner_id])]);
   return { graph: { concepts: concepts.map(c => ({ id: String(c.id), ...(c.merged_into ? { mergedInto: String(c.merged_into) } : {}) })), links: links.map(l => ({ fromId: String(l.from_id), toId: String(l.to_id), kind: l.kind as Link['kind'] })), aims: aims.map(toAim) }, aimRows: aims, linkRows: links };
@@ -27,6 +28,60 @@ export async function planLink(ctx: Context): Promise<Plan> {
   return { effects: [{ sql: 'DELETE FROM links WHERE learner_id=? AND from_id=? AND to_id=? AND kind=? AND __GUARD__', args: [ctx.actor.learner_id, fromId, toId, link.kind] }], data: { ids: [] }, graphChanged: true };
 }
 function freshAim(ctx: Context, aim: Aim): SqlEffect { return insert('aims', { ...common(ctx, ctx.newId('ai')), concept_id: aim.conceptId, owner_kind: aim.ownerKind, owner_id: aim.ownerId, level: aim.level, parked: aim.parked ? 1 : 0 }); }
+function slugify(value: string): string {
+  return value.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 80) || 'topic';
+}
+/** Queue a future topic as a concept plus a parked aim, optionally linked, in one transaction. */
+export async function planQueueTopic(ctx: Context): Promise<Plan> {
+  const data = ctx.envelope.data; const effects: SqlEffect[] = [];
+  let conceptId: string;
+  if (typeof data.concept_id === 'string') {
+    const existing = await canonicalConcept(ctx, data.concept_id);
+    if (existing.archived) invalid('Cannot queue an archived concept');
+    conceptId = String(existing.id);
+  } else {
+    const topic = String(data.topic);
+    const title = String(data.title ?? topic);
+    const realm = String(data.realm ?? 'general'); const area = String(data.area ?? 'general'); const slug = String(data.slug ?? slugify(title));
+    const existing = await ctx.db.prepare('SELECT * FROM concepts WHERE learner_id=? AND realm=? AND area=? AND slug=? AND merged_into IS NULL').bind(ctx.actor.learner_id, realm, area, slug).first<Row>();
+    if (existing) {
+      if (existing.archived) invalid('Cannot queue an archived concept');
+      conceptId = String(existing.id);
+    } else {
+      const conceptPlan = await planConcept({ ...ctx, envelope: { ...ctx.envelope, data: {
+        realm, area, slug, title, purpose: String(data.purpose ?? data.question ?? topic), origin: 'frontier', anchor_ids: [],
+      } } });
+      const created = conceptPlan.data.ids?.[0];
+      if (!created) invalid('Concept identity was not created');
+      conceptId = String(created); effects.push(...conceptPlan.effects);
+    }
+  }
+  const goalId = typeof data.goal_id === 'string' ? data.goal_id : undefined;
+  const ownerKind = goalId ? 'goal' : 'learner'; const ownerId = goalId ?? ctx.actor.learner_id;
+  if (goalId) { const goal = await entity(ctx, 'goals', goalId); if (goal.state !== 'active') invalid('Cannot queue a topic for a closed goal'); }
+  const existingAim = await ctx.db.prepare('SELECT * FROM aims WHERE learner_id=? AND concept_id=? AND owner_kind=? AND owner_id=? AND active=1').bind(ctx.actor.learner_id, conceptId, ownerKind, ownerId).first<Row>();
+  let aimId: string; let aimCreated = false;
+  if (existingAim) aimId = String(existingAim.id);
+  else {
+    aimId = ctx.newId('ai'); aimCreated = true;
+    effects.push(insert('aims', { ...common(ctx, aimId), concept_id: conceptId, owner_kind: ownerKind, owner_id: ownerId, level: 1, parked: 1 }));
+  }
+  const links = Array.isArray(data.links) ? data.links as Row[] : [];
+  const { graph, linkRows } = await loadGraph(ctx); const created: Link[] = [];
+  for (const link of links) {
+    const to = await canonicalConcept(ctx, String(link.to_id));
+    if (to.archived) invalid('Cannot link an archived concept');
+    let [fromId, toId] = [conceptId, String(to.id)];
+    if (link.kind === 'relates' && fromId > toId) { [fromId, toId] = [toId, fromId]; }
+    if (fromId === toId) invalid('Self links are not permitted');
+    const kind = link.kind as Link['kind'];
+    if (linkRows.some(row => row.from_id === fromId && row.to_id === toId && row.kind === kind)) continue;
+    assertAcyclic([...graph.links, ...created, { fromId, toId, kind }]);
+    created.push({ fromId, toId, kind });
+    effects.push(insert('links', { ...common(ctx, ctx.newId('ln')), from_id: fromId, to_id: toId, kind }, 'ON CONFLICT(learner_id,from_id,to_id,kind) DO NOTHING'));
+  }
+  return { effects, data: { ids: [conceptId, aimId], concept_id: conceptId, aim_id: aimId, aim_created: aimCreated, parked: existingAim ? Boolean(existingAim.parked) : true, links: created.map(link => ({ from_id: link.fromId, to_id: link.toId, kind: link.kind })) }, graphChanged: true };
+}
 export async function planMerge(ctx: Context): Promise<Plan> {
   confirmed(ctx); const data = ctx.envelope.data;
   const source = await entity(ctx, 'concepts', String(data.source_id)); const target = await entity(ctx, 'concepts', String(data.target_id));

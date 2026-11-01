@@ -29,6 +29,10 @@ Hosted-client notes:
 - `retract` and other destructive tools may require an explicit client confirmation.
 - Closed sessions cannot be deleted through the capture surface; the retraction suppresses the
   inquiry but leaves the closed session as history.
+- Queue a topic the learner wants to learn later with `queue_topic`; it creates or reuses the
+  concept, creates a parked aim at level 1, and optionally links it. `future` lists parked topics;
+  `unpark_aim` moves one into the active frontier. Do not start a session or log an inquiry just to
+  remember a future topic.
 
 ## Read in this order
 

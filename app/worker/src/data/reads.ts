@@ -9,7 +9,7 @@ import { loadGraph } from './graph';
 const fields: Record<string, readonly string[]> = {
   whoami: [], protocol: [],calibration:['concept_id','realm','level','limit','cursor'],misconceptions:['concept_id','realm','level','limit','cursor'],attempt_status:['attempt_id'],item_status:['item_id'], concept_get: ['concept_id'], concept_search: ['query', 'realm', 'limit', 'cursor'],
   mastery: ['concept_id', 'realm', 'level', 'limit', 'cursor'], frontier: ['limit', 'cursor'], next: ['limit', 'cursor', 'slot'], needs_you: ['limit', 'cursor'],
-  neighbors: ['concept_id', 'limit', 'cursor'], aims: ['owner_id', 'goal_id', 'realm', 'limit', 'cursor'], gaps: ['owner_id', 'goal_id', 'realm', 'limit', 'cursor'],
+  neighbors: ['concept_id', 'limit', 'cursor'], aims: ['owner_id', 'goal_id', 'realm', 'limit', 'cursor'], gaps: ['owner_id', 'goal_id', 'realm', 'limit', 'cursor'], future: ['realm', 'limit', 'cursor'],
   goal_get: ['id'], goal_list: ['state', 'limit', 'cursor'], sessions: ['state', 'limit', 'cursor'],
   history: ['record_id', 'limit', 'cursor'], learner_notes: ['kind', 'limit', 'cursor'], inbox: ['limit', 'cursor'],
   query: ['view', 'select', 'filters', 'limit', 'cursor'],
@@ -74,6 +74,10 @@ export async function readOperation(db: D1Database, operation: string, input: un
     const aims = await rows(db, 'SELECT a.* FROM aims a LEFT JOIN goals g ON a.owner_kind=\'goal\' AND g.id=a.owner_id WHERE a.learner_id=? AND a.active=1 AND (a.owner_kind=\'learner\' OR g.state=\'active\') ORDER BY a.created_seq,a.id', [actor.learner_id]);
     const states = await mastery(db, actor, data.realm ? { realm: data.realm } : {});
     return paged(aims.filter(a => (!data.realm || states.some(m => m.concept_id === a.concept_id)) && (!data.owner_id || a.owner_id === data.owner_id) && (!data.goal_id || a.owner_id === data.goal_id) && (operation !== 'gaps' || !a.parked && !states.some(m => m.concept_id === a.concept_id && m.level === a.level && ['Solid', 'Secure'].includes(String(m.state)) && !m.provisional))), data);
+  }
+  if (operation === 'future') {
+    const realm = typeof data.realm === 'string' ? data.realm : null;
+    return paged(await rows(db, 'SELECT a.id AS aim_id,a.concept_id,c.title,c.realm,c.area,c.slug,a.owner_kind,a.owner_id,a.level,a.parked,a.created_seq,a.version FROM aims a JOIN concepts c ON c.id=a.concept_id LEFT JOIN goals g ON a.owner_kind=\'goal\' AND g.id=a.owner_id WHERE a.learner_id=? AND a.active=1 AND a.parked=1 AND c.archived=0 AND (a.owner_kind=\'learner\' OR g.state=\'active\') AND (? IS NULL OR c.realm=?) ORDER BY a.created_seq,a.id', [actor.learner_id, realm, realm]), data);
   }
   if (operation === 'frontier' || operation === 'next') {
     const { graph } = await loadGraph(ctx); const states = await mastery(db, actor, {});

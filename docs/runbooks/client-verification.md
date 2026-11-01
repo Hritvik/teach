@@ -94,6 +94,25 @@ session  state closed
 inquiry  retracted by record_corrections
 ```
 
+## Future topics
+
+When the learner names something to learn later, use `queue_topic` instead of starting a session or
+logging an inquiry:
+
+```json
+{
+  "topic": "Two-thread handoff problem",
+  "question": "What is the two-thread handoff problem?",
+  "realm": "cs",
+  "area": "concurrency",
+  "links": []
+}
+```
+
+It creates or reuses the concept, creates a parked aim at level 1, and adds optional links in one
+transaction. `future` lists parked topics; `frontier` and `gaps` exclude them; `unpark_aim` moves one
+into the active frontier.
+
 ## Known friction
 
 - Scope changes need a full connector re-add, not a tool refresh.

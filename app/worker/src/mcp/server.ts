@@ -5,14 +5,14 @@ import type { RepositoryOptions } from '../data/repository.ts';
 import { protocol, captureProtocol } from './protocol.ts';
 
 export const readTools = ['whoami','protocol','concept_get','concept_search','mastery','frontier','next',
-  'needs_you','calibration','misconceptions','attempt_status','item_status','budget_status','neighbors','aims','gaps','goal_get','goal_list','sessions','history','learner_notes','inbox','query'] as const;
-export const writeTools = ['session_start','session_end','concept_upsert','set_aim','park_aim','unpark_aim',
+  'needs_you','calibration','misconceptions','attempt_status','item_status','budget_status','neighbors','aims','gaps','future','goal_get','goal_list','sessions','history','learner_notes','inbox','query'] as const;
+export const writeTools = ['session_start','session_end','concept_upsert','queue_topic','set_aim','park_aim','unpark_aim',
   'goal_create','goal_update','goal_close','log_inquiry','record','link','unlink','amend','retract',
   'anchor_capture','item_add','item_verify','item_retire','item_next','answer','dispute_answer','submit_to_inbox','resolve_inbox_entry','set_balance','write_learner_note','archive_candidate','propose_candidates','concept_merge'] as const;
 
 export const captureReadTools = ['whoami','protocol','concept_get','concept_search','frontier','neighbors',
-  'aims','gaps','goal_get','goal_list','sessions','history','learner_notes','inbox','query'] as const;
-export const captureWriteTools = ['session_start','session_end','concept_upsert','set_aim','park_aim','unpark_aim',
+  'aims','gaps','future','goal_get','goal_list','sessions','history','learner_notes','inbox','query'] as const;
+export const captureWriteTools = ['session_start','session_end','concept_upsert','queue_topic','set_aim','park_aim','unpark_aim',
   'goal_create','goal_update','log_inquiry','record','link','unlink','amend','retract','submit_to_inbox',
   'resolve_inbox_entry','set_balance','write_learner_note','archive_candidate','propose_candidates'] as const;
 
@@ -32,12 +32,14 @@ const readDescriptions: Record<string,string> = {
   inbox: 'List unresolved inquiries waiting in the inbox.',
   frontier: 'Read the topics currently at the learning frontier.',
   gaps: 'Read known gaps in the learning graph.',
+  future: 'List topics queued for later: parked aims joined to their concepts. Use unpark_aim to move one into the active frontier.',
 };
 const writeDescriptions: Record<string,string> = {
   session_start: 'Start or resume a session. data may contain resume_session_id and goal_ids; expected is {}.',
   session_end: 'Close a session. expected must include the session id and its current version; data requires session_id.',
   log_inquiry: 'Save an inquiry. Put session_id at the top level; data requires text, concept_ids and unresolved.',
   concept_upsert: 'Create or update a concept. Reuse an existing concept before proposing a duplicate.',
+  queue_topic: 'Queue a topic for later. Creates or reuses a concept, creates a parked aim at level 1, and adds optional links atomically. Use this instead of starting a session or logging an inquiry just to remember a topic.',
   record: 'Record exposure or inquiry evidence. Assessed answers are unavailable in the capture release.',
   retract: 'Withdraw an unassessed inquiry or exposure. data requires root_record_id, expected_effective_revision and reason. Destructive; the client may ask for confirmation.',
 };
