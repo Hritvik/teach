@@ -40,8 +40,7 @@ Hosted-client notes:
 6. `docs/superpowers/specs/2026-10-23-teach-design.md` — wider product design; later books, feed,
    reader and instrument scope.
 
-`handover/` is historical. Its paths, running services and completed checks describe a different
-checkout and machine. Do not rerun its setup or cleanup commands without verifying their targets.
+Historical handover material and the revision-7 design were removed after planning moved to the central repository.
 
 ## Layout
 

@@ -12,7 +12,7 @@ defined there; where this document and the glossary disagree, the glossary wins.
 
 ### Revision history
 
-Revisions 1–7 and their review logs are preserved in the [historical revision 7](2026-10-23-teach-design-r7-historical.md).
+Revisions 1–7 and their review logs were retired when planning moved to the central repository.
 Revision 8 removes the Meesho track, sphere partition, cross-tracker sync and local daemon. The learning model remains intact.
 Revision 9 moves initial General tracker hosting into the first usable conversational release (M1 + M2),
 with books, feed and richer instruments later. See the [release decision](../../../.scratch/teach-general/issues/01-choose-the-first-useful-learning-experience.md#answer).
@@ -753,6 +753,5 @@ appearance, prompts, verification/compilation queues, FSRS mapping, fixtures and
 
 ## Review history
 
-The three revision-7 review rounds are preserved with the [historical design](2026-10-23-teach-design-r7-historical.md).
-They do not certify the single-tracker revision. Review the current revision for stale dual-tracker requirements, preservation of the learning behaviour,
+The three revision-7 review rounds are historical and were retired with the old design. They do not certify the single-tracker revision. Review the current revision for stale dual-tracker requirements, preservation of the learning behaviour,
 and consistency with the confirmed hosted-first conversational release before planning implementation.

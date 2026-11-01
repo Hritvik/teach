@@ -37,7 +37,6 @@ planning documents. Phase A implements and tests the hosted tracker foundation l
 - `docs/adr/`: accepted architecture decision.
 - `docs/superpowers/specs/`: reviewed design and supporting findings.
 - `docs/superpowers/plans/`: M0 and sync spike plans.
-- `handover/`: historical state, decisions, open items, and copied execution evidence.
 
 The original design is preserved as revision 7; the current design, glossary and README reflect the
 single-tracker scope. Historical plans and handover files carry supersession notices. macOS metadata and the opaque nested `.7z` file were omitted; the original ZIP remains the source archive.

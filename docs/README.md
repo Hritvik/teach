@@ -9,7 +9,6 @@
 | Contracts | [contracts/](superpowers/specs/contracts/) | Auth/recovery, data/rules and grading-service contracts. |
 | Runbooks | [runbooks/](runbooks/) | Hosted setup, grading setup and hosted-client verification. |
 | Wayfinder | [map.md](../.scratch/teach-general/map.md) | Completed decision map for the first release. |
-| History | [handover/](../handover/README.md) | Historical state from the earlier Meesho-scoped effort. Not current setup instructions. |
 | Evaluation | [evals/README.md](../evals/README.md) | The grading corpus and how it is used. |
 
 ## Reading order for a new contributor
