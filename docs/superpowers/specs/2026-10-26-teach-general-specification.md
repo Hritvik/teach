@@ -11,7 +11,7 @@ win; report and resolve conflicts before building rather than silently choosing 
 The learner can begin with an inquiry or goal, learn through conversation and active checks, save a
 truthful record of understanding, and continue through another supported agent without starting over.
 Teach grows a knowledge graph and distinguishes urgent preparation from longer-term growth. It serves
-one learner's general knowledge. Employer-specific records and the former Meesho track are excluded.
+one learner's general knowledge. Employer-specific records and the former former employer track are excluded.
 
 The first usable release includes the hosted General tracker, conversational tutor, source/key
 verification, shared independent free-text grading, reviews and required learner controls. It targets

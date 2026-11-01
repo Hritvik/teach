@@ -80,7 +80,7 @@ records the reviewed source and bundle hashes, migration hashes and the operator
   `wrangler.capture.jsonc`.
 - Ask before creating Cloudflare resources, changing credentials, deploying the full mode or changing
   external services.
-- Keep one general tracker. Employer-specific or Meesho-scoped learning is out of scope.
+- Keep one general tracker. Employer-specific or former employer-scoped learning is out of scope.
 - Preserve the capture/full boundary. The capture entrypoint must not gain grading or scheduled work.
 - Cloudflare Workers throws a `TypeError` for `redirect: 'error'`; it does not implement that Fetch
   mode. Use `redirect: 'manual'` or omit it. The auth, control and grading fetches avoid it, and the

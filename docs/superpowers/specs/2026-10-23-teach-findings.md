@@ -1,4 +1,4 @@
-> **Historical — scope changed 2026-10-26.** [ADR 0002](../../adr/0002-single-general-tracker.md) removes the Meesho track. Use the root README and current design for next steps; old sync, daemon, employer-policy and repository-refresh tasks are not current prerequisites.
+> **Historical — scope changed 2026-10-26.** [ADR 0002](../../adr/0002-single-general-tracker.md) removes the former employer track. Use the root README and current design for next steps; old sync, daemon, employer-policy and repository-refresh tasks are not current prerequisites.
 
 # teach — findings the design rests on
 
@@ -21,7 +21,7 @@ CW = `~/.claude/plugins/marketplaces/hritvik-skills/codewalk`.
 | F9 | The gym tracker is a remote HTTP MCP at `https://gym-tracker-mcp.hritvikdinkar.workers.dev/mcp`, backed by a Cloudflare D1 database exported weekly with `wrangler d1 export`. Its cached tool list has 84 tools including `whoami`, `needs_you`, `staleness`, `amend`, `history`, `query`. | `grep -o '"url": "[^"]*workers.dev[^"]*"' ~/.claude.json`; `grep -n 'd1 export' ~/.local/bin/gym-tracker-backup.sh` → line 12; python over `~/.cache/gym-tracker/tools.json` | config entry; backup script line; cached tool names (a cache, possibly stale) |
 | F10 | The gym tracker's source is **not** at `~/IdeaProjects/gym-tracker-skills`, the project path recorded in `~/.claude.json`; the backup script still references `$HOME/IdeaProjects/gym-tracker-skills/app/worker`. | `ls ~/IdeaProjects/gym-tracker-skills` → no such directory | directory presence |
 | F11 | The IntelliJ MCP's `xdebug_start_debugger_session` accepts either a run-configuration name or `filePath` + `line` pointing at a runnable location such as a test. | tool schema loaded via ToolSearch in this session | the published schema, not an exercised call |
-| F12 | The artifact-review grounding pack for the marketplace repo is at `~/IdeaProjects/meesho-open-m-skills/docs/design-review/grounding.md`. | `ls` over the four candidate paths | file presence |
+| F12 | The artifact-review grounding pack for the marketplace repo is at `the former employer skills repository/docs/design-review/grounding.md`. | `ls` over the four candidate paths | file presence |
 | F13 | The six ICUD walks are all pinned at `1614631a5d3f`, **21 commits behind** `develop` HEAD; **19 of the 30** files their steps cite changed since (+138/−85), including `OdrApprovalHandler`, `ReturnReallocationService`, `OdrApprovalAndRetryQueueConsumerHelper`, `OrderDeliveredListenerHelper` and the approval consumers. They are stale, not current. | `_index.json` pins; `git rev-list --count 1614631a5d3f..HEAD` → 21; `git diff --stat 1614631a5d3f HEAD -- <union of step files>` | commits since the pin; files cited by any step of the six walks |
 
 ## Assumptions & Unverified Claims

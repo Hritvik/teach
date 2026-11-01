@@ -11,7 +11,7 @@ The capture Worker is deployed at `https://teach-mcp.hritvikdinkar.workers.dev`.
 Imported from `teach.zip` on 2026-10-26, this repository now includes the Phase A–C implementation: domain rules, D1 storage, OAuth/OIDC, authoritative grants, trusted browser controls, independent assessment jobs and persisted review scheduling. Hosted access fails closed without private configuration. External setup and client certification remain pending.
 
 The intended implementation is one TypeScript Cloudflare Worker backed by D1: the **General tracker**,
-shared across agents and devices. The Meesho track has been removed by the learner's instruction.
+shared across agents and devices. The former employer track has been removed by the learner's instruction.
 See [ADR 0002](docs/adr/0002-single-general-tracker.md). Employer-specific learning is outside scope.
 
 ## Start here
