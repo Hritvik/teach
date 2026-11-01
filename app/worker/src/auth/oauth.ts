@@ -69,13 +69,13 @@ async function googleIdentity(config: HostedOAuthConfig, env: HostedOAuthEnv, co
   if (!env.GOOGLE_CLIENT_SECRET) throw new Error('Upstream not configured');
   const fetcher = deps.fetch ?? fetch;
   let response: Response;
-  try { response = await fetcher('https://oauth2.googleapis.com/token', { method: 'POST', redirect: 'error', signal: AbortSignal.timeout(5000), headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body: new URLSearchParams({ code, client_id: config.googleClientId, client_secret: env.GOOGLE_CLIENT_SECRET, redirect_uri: `${config.origin}/callback`, grant_type: 'authorization_code' }) }); }
+  try { response = await fetcher('https://oauth2.googleapis.com/token', { method: 'POST', signal: AbortSignal.timeout(15000), headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body: new URLSearchParams({ code, client_id: config.googleClientId, client_secret: env.GOOGLE_CLIENT_SECRET, redirect_uri: `${config.origin}/callback`, grant_type: 'authorization_code' }) }); }
   catch (error) { console.warn(`Teach google token exchange request failed: ${error instanceof Error ? error.name : 'unknown'}`); throw error; }
   const token = await upstreamJson(response, 'google token exchange');
   if (!token || typeof token !== 'object' || !('id_token' in token) || typeof token.id_token !== 'string') throw new Error('Missing identity');
   stage('google_jwks');
   let certs: Response;
-  try { certs = await fetcher('https://www.googleapis.com/oauth2/v3/certs', { redirect: 'error', signal: AbortSignal.timeout(5000) }); }
+  try { certs = await fetcher('https://www.googleapis.com/oauth2/v3/certs', { signal: AbortSignal.timeout(15000) }); }
   catch (error) { console.warn(`Teach google jwks request failed: ${error instanceof Error ? error.name : 'unknown'}`); throw error; }
   const jwks = await upstreamJson(certs, 'google jwks');
   if (!jwks || typeof jwks !== 'object' || !('keys' in jwks) || !Array.isArray(jwks.keys)) throw new Error('Invalid keys');

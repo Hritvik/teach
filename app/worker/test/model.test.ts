@@ -56,7 +56,7 @@ describe('one-shot stateless provider adapter',()=>{
  it('sends exactly once, validates result and reports trustworthy bounded usage',async()=>{
   const fetcher=vi.fn(async()=>completed(grade()));const result=await invokeModelJob(request(),policy,{fetch:fetcher,now:()=>Date.UTC(2026,9,29)});
   expect(result).toMatchObject({status:'completed',result:grade(),usage:{inputTokens:100,outputTokens:20},providerRequestId:'req_test'});expect(fetcher).toHaveBeenCalledTimes(1);
-  expect(fetcher).toHaveBeenCalledWith('https://api.openai.com/v1/responses',expect.objectContaining({method:'POST',redirect:'error'}));
+  expect(fetcher).toHaveBeenCalledWith('https://api.openai.com/v1/responses',expect.objectContaining({method:'POST'}));
  });
  it('keeps refusal, incomplete, malformed, aggregate disagreement and outage pending',async()=>{
   for(const [response,reason] of [[completed(grade(),{output:[{type:'message',content:[{type:'refusal',refusal:'cannot assess'}]}]}),'refusal'],[completed(grade(),{status:'incomplete'}),'incomplete'],[new Response('invalid'),'malformed_response'],[completed(grade({grade:'wrong'})),'invalid_result'],[new Response('{}',{status:503}),'provider_unavailable']] as const){const fetcher=vi.fn(async()=>response);expect(await invokeModelJob(request(),policy,{fetch:fetcher,now:()=>Date.UTC(2026,9,29)})).toMatchObject({status:'pending',reason});expect(fetcher).toHaveBeenCalledTimes(1);}

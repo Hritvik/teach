@@ -69,7 +69,12 @@ async function callbackFixture(patch: Record<string, unknown> = {}, failure: 'pe
   };
   const authority = { createPendingGrant: vi.fn(async () => { order.push('pending'); return { ok: failure !== 'pending' }; }), activateGrant: vi.fn(async () => { order.push('active'); return { ok: failure !== 'activation' }; }), admit: vi.fn(async () => ({ ok: true, admission: { scopes: ['teach:read'] } })) };
   const env = { OAUTH_PROVIDER: helpers, GOOGLE_CLIENT_SECRET: 'secret', SECURITY_LEDGER: { idFromName: () => 'id', get: () => authority } } as unknown as HostedOAuthEnv;
-  const fetcher = vi.fn(async (url: RequestInfo | URL) => String(url).includes('/token') ? Response.json({ id_token: signed }) : Response.json({ keys: [{ ...await crypto.subtle.exportKey('jwk', pair.publicKey), kid: 'one', alg: 'RS256', use: 'sig' }] }));
+  // Cloudflare Workers throws a TypeError for redirect: "error"; model that so
+  // a regression fails here instead of only in a live sign-in.
+  const fetcher = vi.fn(async (url: RequestInfo | URL, init?: RequestInit) => {
+    if (init?.redirect === 'error') throw new TypeError('Workers does not implement redirect: error');
+    return String(url).includes('/token') ? Response.json({ id_token: signed }) : Response.json({ keys: [{ ...await crypto.subtle.exportKey('jwk', pair.publicKey), kid: 'one', alg: 'RS256', use: 'sig' }] });
+  });
   return { env, helpers, authority, order, fetcher, handler: createAuthorizationHandler(config, { now: () => now, fetch: fetcher }) };
 }
 describe('Google owner callback and authoritative grant issue', () => {
