@@ -27,7 +27,7 @@ describe('capture-only MCP release', () => {
     try {
       const tools = (await client.listTools()).tools;
       const names = tools.map(tool => tool.name);
-      for (const name of ['session_start','log_inquiry','record','concept_upsert','set_aim','learner_notes','inbox']) expect(names).toContain(name);
+      for (const name of ['session_start','log_inquiry','record','concept_upsert','queue_topic','set_aim','future','learner_notes','inbox']) expect(names).toContain(name);
       for (const name of ['anchor_capture','item_add','item_verify','item_next','answer','attempt_status','item_status','dispute_answer','budget_status','calibration','misconceptions','mastery','next','needs_you','concept_merge','goal_close']) expect(names).not.toContain(name);
       expect(tools.find(tool => tool.name === 'history')?.inputSchema).toMatchObject({required:['record_id']});
       expect(tools.find(tool => tool.name === 'session_end')?.description).toContain('expected');
@@ -38,6 +38,15 @@ describe('capture-only MCP release', () => {
       expect(resource).toContain('Write envelope');
       expect(resource).toContain('history requires record_id');
       expect(JSON.stringify(await client.callTool({name:'protocol',arguments:{}}))).toContain('capture-only');
+    } finally { await client.close(); }
+  });
+  it('queues a future topic through the capture surface', async () => {
+    const client = await clientFor('capture');
+    try {
+      const queued = structured(await client.callTool({ name: 'queue_topic', arguments: envelope('queue_topic', { topic: 'Two-thread handoff problem', question: 'What is the two-thread handoff problem?', realm: 'cs', area: 'concurrency' }) }));
+      expect(queued).toMatchObject({ ok: true, data: { parked: true } });
+      const future = structured(await client.callTool({ name: 'future', arguments: {} }));
+      expect(JSON.stringify(future)).toContain('Two-thread handoff problem');
     } finally { await client.close(); }
   });
   it('names the missing field when a write payload is invalid', async () => {

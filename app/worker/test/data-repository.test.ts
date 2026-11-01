@@ -65,6 +65,58 @@ describe('real D1 learning repository', () => {
     expect(await db.prepare('SELECT COUNT(*) AS n FROM inquiries').first('n')).toBe(1);
   });
 
+  it('queues a future topic as a parked aim and lists it only in future', async () => {
+    const queued = success(await repo.execute(envelope('queue_topic', { topic: 'Two-thread handoff problem', question: 'What is the two-thread handoff problem?', realm: 'cs', area: 'concurrency' }), actor));
+    const conceptId = String(queued.data.concept_id); const aimId = String(queued.data.aim_id);
+    expect(queued.data).toMatchObject({ parked: true, aim_created: true });
+    expect(success(await repo.read('future', {}, actor)).data.rows).toEqual([expect.objectContaining({ concept_id: conceptId, title: 'Two-thread handoff problem', realm: 'cs', area: 'concurrency', parked: 1 })]);
+    expect(success(await repo.read('frontier', {}, actor)).data.rows).toEqual([]);
+    expect(success(await repo.read('aims', {}, actor)).data.rows).toEqual([expect.objectContaining({ id: aimId, parked: 1 })]);
+    success(await repo.execute(envelope('unpark_aim', { id: aimId }, { expected: { [aimId]: 1 } }), actor));
+    expect(success(await repo.read('future', {}, actor)).data.rows).toEqual([]);
+    expect(success(await repo.read('aims', {}, actor)).data.rows).toEqual([expect.objectContaining({ id: aimId, parked: 0 })]);
+  });
+
+  it('reuses the concept and parked aim when the same topic is queued twice', async () => {
+    const first = success(await repo.execute(envelope('queue_topic', { topic: 'Two-thread handoff problem', realm: 'cs', area: 'concurrency' }), actor));
+    const second = success(await repo.execute(envelope('queue_topic', { topic: 'Two-thread handoff problem', realm: 'cs', area: 'concurrency' }), actor));
+    expect(second.data).toMatchObject({ concept_id: first.data.concept_id, aim_id: first.data.aim_id, aim_created: false, parked: true });
+    expect(await db.prepare('SELECT COUNT(*) AS n FROM concepts').first('n')).toBe(1);
+    expect(await db.prepare('SELECT COUNT(*) AS n FROM aims').first('n')).toBe(1);
+  });
+
+  it('queues an existing concept by id', async () => {
+    const c = id(await concept());
+    const queued = success(await repo.execute(envelope('queue_topic', { concept_id: c }), actor));
+    expect(queued.data).toMatchObject({ concept_id: c, parked: true, aim_created: true });
+    expect(success(await repo.read('future', {}, actor)).data.rows).toEqual([expect.objectContaining({ concept_id: c, title: 'Locks' })]);
+  });
+
+  it('refuses to queue an archived concept', async () => {
+    const c = id(await concept());
+    success(await repo.execute(envelope('archive_candidate', { concept_ids: [c] }, { expected: { [c]: 1 } }), actor));
+    expect(await repo.execute(envelope('queue_topic', { concept_id: c }), actor)).toMatchObject({ ok: false, error: { code: 'INVALID_INPUT' } });
+  });
+
+  it('queues a linked topic under a goal', async () => {
+    const goal = id(success(await repo.execute(envelope('goal_create', { title: 'Concurrency', source: {} }), actor)));
+    const locks = id(await concept());
+    const queued = success(await repo.execute(envelope('queue_topic', { topic: 'Condition variables', realm: 'cs', area: 'concurrency', goal_id: goal, links: [{ to_id: locks, kind: 'relates' }] }), actor));
+    const conceptId = String(queued.data.concept_id);
+    expect(success(await repo.read('future', {}, actor)).data.rows).toEqual([expect.objectContaining({ concept_id: conceptId, owner_kind: 'goal', owner_id: goal, parked: 1 })]);
+    expect(await db.prepare('SELECT COUNT(*) AS n FROM links').first('n')).toBe(1);
+    expect(JSON.stringify(success(await repo.read('neighbors', { concept_id: conceptId }, actor)).data.rows)).toContain(locks);
+  });
+
+  it('does not create a queued topic when a link target is invalid', async () => {
+    const beforeConcepts = await db.prepare('SELECT COUNT(*) AS n FROM concepts').first('n');
+    const beforeAims = await db.prepare('SELECT COUNT(*) AS n FROM aims').first('n');
+    const queued = await repo.execute(envelope('queue_topic', { topic: 'Atomic topic', links: [{ to_id: 'c_00000000-0000-4000-8000-000000000000', kind: 'relates' }] }), actor);
+    expect(queued).toMatchObject({ ok: false, error: { code: 'INVALID_INPUT' } });
+    expect(await db.prepare('SELECT COUNT(*) AS n FROM concepts').first('n')).toBe(beforeConcepts);
+    expect(await db.prepare('SELECT COUNT(*) AS n FROM aims').first('n')).toBe(beforeAims);
+  });
+
   it('replays a lost acknowledgement once and rejects changed content under its key', async () => {
     const request = envelope('session_start', {});
     const first = success(await repo.execute(request, actor));

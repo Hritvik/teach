@@ -6,12 +6,12 @@ A lifelong tutor that grows a knowledge graph from the learner’s inquiries and
 
 The immediate milestone is an [owner-only capture deployment](docs/superpowers/plans/2026-10-29-teach-capture-deployment.md). Grading and spaced reviews are deferred in that fixed release mode. Use `npm run build:capture` for its bundle.
 
-The capture Worker is deployed at `https://teach-mcp.hritvikdinkar.workers.dev`. Owner sign-in and the capture write path are verified as of 2026-11-01: Google OAuth completes, `/oauth/token` issues all three scopes after a full connector re-add, and a live ChatGPT session completed `session_start` → `log_inquiry` → `session_end` → `retract`. D1 recorded sequences 1–4; the inquiry is suppressed from the inbox and preserved in audit history. Closed sessions cannot be deleted through the capture surface. `/health`, the `/mcp` OAuth challenge and the protected-resource metadata are verified by `npm run verify:deploy`.
+The capture Worker is deployed at `https://teach-mcp.hritvikdinkar.workers.dev`. Owner sign-in and the capture write path are verified as of 2026-11-01: Google OAuth completes, `/oauth/token` issues all three scopes after a full connector re-add, and a live ChatGPT session completed `session_start` → `log_inquiry` → `session_end` → `retract`. D1 recorded sequences 1–4; the inquiry is suppressed from the inbox and preserved in audit history. Closed sessions cannot be deleted through the capture surface. Future topics are queued with `queue_topic` as parked aims and listed by `future`; `unpark_aim` moves one into the active frontier. `/health`, the `/mcp` OAuth challenge and the protected-resource metadata are verified by `npm run verify:deploy`.
 
 Imported from `teach.zip` on 2026-10-26, this repository now includes the Phase A–C implementation: domain rules, D1 storage, OAuth/OIDC, authoritative grants, trusted browser controls, independent assessment jobs and persisted review scheduling. Hosted access fails closed without private configuration. External setup and client certification remain pending.
 
 The intended implementation is one TypeScript Cloudflare Worker backed by D1: the **General tracker**,
-shared across agents and devices. The Meesho track has been removed by the learner's instruction.
+shared across agents and devices. The former employer track has been removed by the learner's instruction.
 See [ADR 0002](docs/adr/0002-single-general-tracker.md). Employer-specific learning is outside scope.
 
 ## Start here
@@ -37,7 +37,6 @@ planning documents. Phase A implements and tests the hosted tracker foundation l
 - `docs/adr/`: accepted architecture decision.
 - `docs/superpowers/specs/`: reviewed design and supporting findings.
 - `docs/superpowers/plans/`: M0 and sync spike plans.
-- `handover/`: historical state, decisions, open items, and copied execution evidence.
 
 The original design is preserved as revision 7; the current design, glossary and README reflect the
 single-tracker scope. Historical plans and handover files carry supersession notices. macOS metadata and the opaque nested `.7z` file were omitted; the original ZIP remains the source archive.

@@ -9,7 +9,7 @@ import { DataError, failure } from './errors';
 import { parseEnvelope, semanticHash } from './validation';
 import { planAim, planConcept, planGoal, planNote, planSession } from './entities';
 import { planCorrection, planInquiry, planRecords } from './learning';
-import { planClose, planLink, planMerge } from './graph';
+import { planClose, planLink, planMerge, planQueueTopic } from './graph';
 import { planMisc } from './misc';
 import { readOperation } from './reads';
 export interface RepositoryOptions { readonly now?: () => Date; readonly id?: (prefix: string) => string; readonly captureSource?: (input:SourceCaptureInput)=>Promise<CapturedSource>; }
@@ -37,6 +37,7 @@ async function plan(ctx: Context): Promise<Plan> {
   if(op==='_complete_assessment')return planAssessmentCompletion(ctx);
   if (op === 'session_start' || op === 'session_end') return planSession(ctx);
   if (op === 'concept_upsert') return planConcept(ctx);
+  if (op === 'queue_topic') return planQueueTopic(ctx);
   if (['set_aim', 'park_aim', 'unpark_aim'].includes(op)) return planAim(ctx);
   if (op === 'goal_create' || op === 'goal_update') return planGoal(ctx);
   if (op === 'write_learner_note') return planNote(ctx);

@@ -7,6 +7,7 @@ const level = z.number().int().min(1).max(4);
 const json = z.record(z.string(), z.unknown());
 const envelopeSchema = z.object({ protocol_version: z.number().int(), rules_version: z.number().int(), recovery_generation: z.number().int().positive(), request_id: z.string().uuid(), operation: z.string().min(1).max(80), reason: z.string().min(1).max(1024), expected: z.record(z.string(), z.number().int().nonnegative()).default({}), session_id: id.optional(), data: json }).strict();
 const concept = z.object({ id: id.optional(), realm: text, area: text, slug: text, title: text, purpose: text, origin: z.enum(['goal', 'inquiry', 'lesson', 'frontier', 'seed']), anchor_ids: z.array(id).max(100).default([]) }).strict();
+const linkKind = z.enum(['requires', 'instantiates', 'deepens', 'relates']);
 const aim = z.object({ id: id.optional(), concept_id: id, owner_kind: z.enum(['learner', 'goal']), owner_id: id, level, parked: z.boolean() }).strict();
 const goal = z.object({ id: id.optional(), title: text, source: json, urgent: z.boolean().default(false), due_at: z.string().datetime().nullable().optional() }).strict();
 const record = z.object({ kind: z.enum(['exposure', 'inquiry', 'self_rating', 'observed']), concept_id: id, level, source: json, occurred_at: z.string().datetime(), content: text.optional(), confidence: z.enum(['sure', 'think', 'guess', 'unknown']).default('unknown'), help: json.default({}) }).strict();
@@ -30,13 +31,18 @@ const schemas: Record<string, z.ZodType> = {
   session_start: z.object({ resume_session_id: id.optional(), goal_ids: z.array(id).max(50).default([]) }).strict(),
   session_end: z.object({ session_id: id, exit_ticket: json.optional(), muddiest_point: text.optional(), what_helped: text.optional() }).strict(),
   concept_upsert: concept,
+  queue_topic: z.object({
+    concept_id: id.optional(), topic: text.optional(), question: text.optional(),
+    realm: text.optional(), area: text.optional(), slug: text.optional(), title: text.optional(), purpose: text.optional(),
+    goal_id: id.optional(), links: z.array(z.object({ to_id: id, kind: linkKind })).max(20).default([]),
+  }).strict().refine(value => value.concept_id !== undefined || value.topic !== undefined, { message: 'Provide topic or concept_id' }),
   set_aim: aim,
   park_aim: z.object({ id }).strict(), unpark_aim: z.object({ id }).strict(),
   goal_create: goal, goal_update: goal.extend({ id }).strict(),
   log_inquiry: z.object({ text, concept_ids: z.array(id).max(100), answer: z.unknown().optional(), unresolved: z.boolean().default(false) }).strict(),
   record: z.object({ records: z.array(record).min(1).max(25) }).strict(),
-  link: z.object({ from_id: id, to_id: id, kind: z.enum(['requires', 'instantiates', 'deepens', 'relates']) }).strict(),
-  unlink: z.object({ from_id: id, to_id: id, kind: z.enum(['requires', 'instantiates', 'deepens', 'relates']) }).strict(),
+  link: z.object({ from_id: id, to_id: id, kind: linkKind }).strict(),
+  unlink: z.object({ from_id: id, to_id: id, kind: linkKind }).strict(),
   amend: z.object({ root_record_id: id, expected_effective_revision: z.number().int().nonnegative(), replacement: json, reason: text }).strict(),
   retract: z.object({ root_record_id: id, expected_effective_revision: z.number().int().nonnegative(), reason: text }).strict(),
   set_balance: z.object({ urgent_pct: z.number().int().min(0).max(100) }).strict(),

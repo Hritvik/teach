@@ -12,7 +12,7 @@ Due reviews have one coordinated occurrence and an expiring session lease. Respe
 Use the same request identity and unchanged payload on a retry. A lost acknowledgement is uncertain, not proof that a write failed. Reconcile the original operation before trying a new write. Explain refused, pending, conflict and provisional states; never say saved before acknowledgement.
 During outages conversation may continue explicitly unsaved. There is no second local tracker or offline outbox, and provider chat history is not automatically recoverable. Do not invent current tracker state.
 Placement starts with the learner's question and a few verified checks at relevant levels; do not demand a fixed quiz or a goal. End a session with an optional concise exit ticket, muddiest point and what helped. Respect the learner's choice to stop.
-Model dispatch is disabled until separately approved credentials, rate policy and budget authorization are configured. No tool may enable paid inference, change the cap, administer grants or approve deletion/restore. Books, reader and recovery execution remain unavailable until their implementation phases.`;
+Model dispatch is disabled until separately approved credentials, rate policy and budget authorization are configured. No tool may enable paid inference, change the cap, administer grants or approve deletion/restore. Books, reader and recovery execution remain unavailable until their implementation phases. Use queue_topic for a topic the learner wants to learn later; it creates a parked aim. future lists parked topics.`;
 
 
 export const captureProtocol = `Teach protocol v1 — capture-only release
@@ -37,9 +37,12 @@ Examples:
 - session_start: expected {}, data {}
 - log_inquiry: session_id "s_…", expected {}, data {text, concept_ids: [], unresolved: true}
 - concept_upsert: expected {}, data {realm, area, slug, title, purpose, origin, anchor_ids: []}
+- queue_topic: expected {}, data {topic, question?, realm?, area?, concept_id?, goal_id?, links?: [{to_id, kind}]}
 - record: session_id "s_…", expected {}, data {records: [{kind: "exposure", concept_id: "c_…", level: 1, source: {kind: "conversation"}, occurred_at: "<ISO timestamp>"}]}
 - session_end: expected {"s_…": 1}, data {session_id: "s_…"}
 - retract: expected {}, data {root_record_id, expected_effective_revision, reason}
+
+Future topics: when the learner names a topic to learn later, search first. If it exists, call queue_topic with concept_id; otherwise pass topic and the realm/area inferred from the graph. queue_topic creates a parked aim at level 1; future lists parked topics; unpark_aim moves one into the active frontier. Do not start a session or log an inquiry just to remember a topic.
 
 A VERSION_CONFLICT names the current version. Reorient and retry with that version in expected; do not invent a new request id for the same payload. Destructive tools such as retract and concept_merge may require the client's confirmation.
 

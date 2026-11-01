@@ -29,6 +29,10 @@ Hosted-client notes:
 - `retract` and other destructive tools may require an explicit client confirmation.
 - Closed sessions cannot be deleted through the capture surface; the retraction suppresses the
   inquiry but leaves the closed session as history.
+- Queue a topic the learner wants to learn later with `queue_topic`; it creates or reuses the
+  concept, creates a parked aim at level 1, and optionally links it. `future` lists parked topics;
+  `unpark_aim` moves one into the active frontier. Do not start a session or log an inquiry just to
+  remember a future topic.
 
 ## Read in this order
 
@@ -40,8 +44,7 @@ Hosted-client notes:
 6. `docs/superpowers/specs/2026-10-23-teach-design.md` — wider product design; later books, feed,
    reader and instrument scope.
 
-`handover/` is historical. Its paths, running services and completed checks describe a different
-checkout and machine. Do not rerun its setup or cleanup commands without verifying their targets.
+Historical handover material and the revision-7 design were removed after planning moved to the central repository.
 
 ## Layout
 
@@ -81,10 +84,20 @@ records the reviewed source and bundle hashes, migration hashes and the operator
   `wrangler.capture.jsonc`.
 - Ask before creating Cloudflare resources, changing credentials, deploying the full mode or changing
   external services.
-- Keep one general tracker. Employer-specific or Meesho-scoped learning is out of scope.
+- Keep one general tracker. Employer-specific or former employer-scoped learning is out of scope.
 - Preserve the capture/full boundary. The capture entrypoint must not gain grading or scheduled work.
 - Cloudflare Workers throws a `TypeError` for `redirect: 'error'`; it does not implement that Fetch
   mode. Use `redirect: 'manual'` or omit it. The auth, control and grading fetches avoid it, and the
   OAuth test fails if it returns.
 - `~/repositories/gym-tracker` (MyFitnessGuide) is a reference baseline, not part of this repository.
   Do not modify it from Teach work.
+
+## Planning location
+
+Active maps, tickets, specs, designs and implementation plans live in
+`~/repositories/portfolio-planning`. Do not create new planning directories or planning documents
+in this repository.
+
+- Read `~/repositories/portfolio-planning/AGENTS.md` before planning.
+- Run `~/repositories/portfolio-planning/capabilities/work/task status` before claiming work.
+- Promote only accepted specs/ADRs here, under `docs/`; active planning stays central.

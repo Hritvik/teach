@@ -13,7 +13,7 @@ _Avoid_: User, student, member
 
 **General tracker**:
 The learner's authoritative record of general knowledge, shared across agents and devices.
-_Avoid_: Meesho tracker, local tracker, remote tracker, second tracker
+_Avoid_: former employer tracker, local tracker, remote tracker, second tracker
 
 ### Knowledge
 
