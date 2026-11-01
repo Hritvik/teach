@@ -6,7 +6,7 @@ A lifelong tutor that grows a knowledge graph from the learner’s inquiries and
 
 The immediate milestone is an [owner-only capture deployment](docs/superpowers/plans/2026-10-29-teach-capture-deployment.md). Grading and spaced reviews are deferred in that fixed release mode. Use `npm run build:capture` for its bundle.
 
-The capture Worker is deployed at `https://teach-mcp.hritvikdinkar.workers.dev`. The last live sign-in reached Google but the callback was refused and Teach failed closed, so authenticated capture is deployed but not yet verified end to end. `/health`, the `/mcp` OAuth challenge and the protected-resource metadata are verified by `npm run verify:deploy`.
+The capture Worker is deployed at `https://teach-mcp.hritvikdinkar.workers.dev`. Owner sign-in is verified as of 2026-11-01: Google OAuth completes, `/oauth/token` issues a `teach:read` grant, and live `whoami`, `sessions` and `inbox` calls return. A capture write round trip is still pending. `/health`, the `/mcp` OAuth challenge and the protected-resource metadata are verified by `npm run verify:deploy`.
 
 Imported from `teach.zip` on 2026-10-26, this repository now includes the Phase A–C implementation: domain rules, D1 storage, OAuth/OIDC, authoritative grants, trusted browser controls, independent assessment jobs and persisted review scheduling. Hosted access fails closed without private configuration. External setup and client certification remain pending.
 
