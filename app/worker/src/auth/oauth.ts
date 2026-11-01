@@ -157,7 +157,10 @@ export function createHostedOAuth(config: HostedOAuthConfig, apiHandler: { fetch
   validate(config);
   return new OAuthProvider<HostedOAuthEnv>({ apiRoute: `${config.origin}/mcp`, apiHandler: { fetch: (request, env, ctx) => apiHandler.fetch(request, env, ctx as OAuthResourceContext<OAuthProps>) }, defaultHandler: createAuthorizationHandler(config, deps),
     authorizeEndpoint: `${config.origin}/authorize`, tokenEndpoint: `${config.origin}/oauth/token`, clientRegistrationEndpoint: `${config.origin}/register`,
-    scopesSupported: scopes, requiredScopes: ['teach:read'], resourceMetadata: { resource: `${config.origin}/mcp`, authorization_servers: [config.origin] },
+    // Advertise all three scopes in the resource metadata and 401 challenge so MCP
+    // clients such as ChatGPT request write access. The handler still enforces each
+    // tool's scope, and the consent page lets a client decline write scopes.
+    scopesSupported: scopes, requiredScopes: scopes, resourceMetadata: { resource: `${config.origin}/mcp`, authorization_servers: [config.origin] },
     clientIdMetadataDocumentEnabled: true, accessTokenTTL: 3600, refreshTokenTTL: 2_592_000,
     tokenExchangeCallback: options => validateTokenGrant(config, options),
   });
