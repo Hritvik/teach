@@ -78,7 +78,7 @@ export async function invokeModelJob(input:unknown,config:ModelDispatchConfig,de
  if(!canDispatchModel(config,(deps.now??Date.now)()))return pending('dispatch_disabled',false);
  let request:ModelJobRequestV1;let built:Awaited<ReturnType<typeof buildModelRequest>>;
  try{request=parseModelJobRequest(input);built=await buildModelRequest(request);}catch(error){return pending(error instanceof RangeError?'input_too_large':'invalid_request',false);}
- let response:Response;try{response=await(deps.fetch??fetch)('https://api.openai.com/v1/responses',{method:'POST',headers:{Authorization:`Bearer ${config.apiKey}`,'Content-Type':'application/json'},body:JSON.stringify(built.body),redirect:'error',signal:AbortSignal.timeout(45000)});}catch{return pending('provider_unavailable',true);}
+ let response:Response;try{response=await(deps.fetch??fetch)('https://api.openai.com/v1/responses',{method:'POST',headers:{Authorization:`Bearer ${config.apiKey}`,'Content-Type':'application/json'},body:JSON.stringify(built.body),signal:AbortSignal.timeout(45000)});}catch{return pending('provider_unavailable',true);}
  const providerRequestId=response.headers.get('x-request-id')?.slice(0,256)??null;
  if(!response.ok)return pending('provider_unavailable',true,null,providerRequestId);
  let raw:unknown;try{raw=await responseJson(response);}catch{return pending('malformed_response',true,null,providerRequestId);}

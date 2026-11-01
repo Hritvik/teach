@@ -15,9 +15,10 @@ are deliberately absent from the capture entrypoint.
 - Deploy config: `app/worker/wrangler.capture.jsonc`
 - Deployment record: `docs/superpowers/plans/2026-10-29-teach-capture-deployment.md`
 
-The last live check reached Google but Teach refused the OAuth callback and failed closed. Hosted
-authenticated capture is therefore deployed but not yet verified end to end. Treat hosted sign-in as
-unproven until a real owner sign-in and a saved inquiry round trip both succeed.
+Owner sign-in is verified as of 2026-11-01: the Google callback completed, `/oauth/token` issued a
+`teach:read` grant, and live `whoami`, `sessions` and `inbox` calls returned successfully. A capture
+write journey (`session_start` → `log_inquiry` → reconnect) is still pending; treat writes as unproven
+until that round trip succeeds.
 
 ## Read in this order
 
@@ -72,5 +73,8 @@ records the reviewed source and bundle hashes, migration hashes and the operator
   external services.
 - Keep one general tracker. Employer-specific or Meesho-scoped learning is out of scope.
 - Preserve the capture/full boundary. The capture entrypoint must not gain grading or scheduled work.
+- Cloudflare Workers throws a `TypeError` for `redirect: 'error'`; it does not implement that Fetch
+  mode. Use `redirect: 'manual'` or omit it. The auth, control and grading fetches avoid it, and the
+  OAuth test fails if it returns.
 - `~/repositories/gym-tracker` (MyFitnessGuide) is a reference baseline, not part of this repository.
   Do not modify it from Teach work.

@@ -52,19 +52,32 @@ async function boundedText(request: { body: ReadableStream<Uint8Array> | null },
     return new TextDecoder('utf-8', { fatal: true }).decode(bytes);
   } finally { reader.releaseLock(); }
 }
-async function upstreamJson(response: Response): Promise<unknown> {
-  if (!response.ok) throw new Error('Upstream unavailable');
+async function upstreamJson(response: Response, label: string): Promise<unknown> {
+  if (!response.ok) {
+    // Google's error body names the refusal (for example invalid_grant) and never
+    // contains the authorization code, client secret or token. Keep it short and
+    // single-line so it is safe to emit to Worker logs.
+    let detail = '';
+    try { detail = (await boundedText(response, 4096)).replace(/\s+/g, ' ').slice(0, 300); } catch { /* Body unavailable. */ }
+    console.warn(`Teach ${label} failed: ${response.status} ${detail}`);
+    throw new Error('Upstream unavailable');
+  }
   return JSON.parse(await boundedText(response, 65536));
 }
 async function googleIdentity(config: HostedOAuthConfig, env: HostedOAuthEnv, code: string, nonce: string, deps: OAuthDependencies, stage: (value: OAuthFailureStage) => void) {
   stage('google_token_exchange');
   if (!env.GOOGLE_CLIENT_SECRET) throw new Error('Upstream not configured');
   const fetcher = deps.fetch ?? fetch;
-  const response = await fetcher('https://oauth2.googleapis.com/token', { method: 'POST', redirect: 'error', signal: AbortSignal.timeout(5000), headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body: new URLSearchParams({ code, client_id: config.googleClientId, client_secret: env.GOOGLE_CLIENT_SECRET, redirect_uri: `${config.origin}/callback`, grant_type: 'authorization_code' }) });
-  const token = await upstreamJson(response);
+  let response: Response;
+  try { response = await fetcher('https://oauth2.googleapis.com/token', { method: 'POST', signal: AbortSignal.timeout(15000), headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body: new URLSearchParams({ code, client_id: config.googleClientId, client_secret: env.GOOGLE_CLIENT_SECRET, redirect_uri: `${config.origin}/callback`, grant_type: 'authorization_code' }) }); }
+  catch (error) { console.warn(`Teach google token exchange request failed: ${error instanceof Error ? error.name : 'unknown'}`); throw error; }
+  const token = await upstreamJson(response, 'google token exchange');
   if (!token || typeof token !== 'object' || !('id_token' in token) || typeof token.id_token !== 'string') throw new Error('Missing identity');
   stage('google_jwks');
-  const jwks = await upstreamJson(await fetcher('https://www.googleapis.com/oauth2/v3/certs', { redirect: 'error', signal: AbortSignal.timeout(5000) }));
+  let certs: Response;
+  try { certs = await fetcher('https://www.googleapis.com/oauth2/v3/certs', { signal: AbortSignal.timeout(15000) }); }
+  catch (error) { console.warn(`Teach google jwks request failed: ${error instanceof Error ? error.name : 'unknown'}`); throw error; }
+  const jwks = await upstreamJson(certs, 'google jwks');
   if (!jwks || typeof jwks !== 'object' || !('keys' in jwks) || !Array.isArray(jwks.keys)) throw new Error('Invalid keys');
   stage('google_identity');
   return verifyGoogleIdentity(token.id_token, { jwks: jwks as TrustedJwks, issuer: config.googleIssuer, subject: config.googleSubject, audience: config.googleClientId, email: config.ownerEmail, learnerId: config.learnerId, nonce, now: (deps.now ?? (() => Math.floor(Date.now() / 1000)))() });
