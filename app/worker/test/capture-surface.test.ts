@@ -40,6 +40,13 @@ describe('capture-only MCP release', () => {
       expect(JSON.stringify(await client.callTool({name:'protocol',arguments:{}}))).toContain('capture-only');
     } finally { await client.close(); }
   });
+  it('names the missing field when a write payload is invalid', async () => {
+    const client = await clientFor('capture');
+    try {
+      const result = await client.callTool({ name: 'concept_upsert', arguments: envelope('concept_upsert', {}) });
+      expect(JSON.stringify(result)).toContain('realm');
+    } finally { await client.close(); }
+  });
   it('does not let a guessed disabled tool name or curated query access the deferred surface', async () => {
     const client = await clientFor('capture');
     try {

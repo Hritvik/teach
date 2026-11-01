@@ -36,6 +36,8 @@ Write envelope — every write tool:
 Examples:
 - session_start: expected {}, data {}
 - log_inquiry: session_id "s_…", expected {}, data {text, concept_ids: [], unresolved: true}
+- concept_upsert: expected {}, data {realm, area, slug, title, purpose, origin, anchor_ids: []}
+- record: session_id "s_…", expected {}, data {records: [{kind: "exposure", concept_id: "c_…", level: 1, source: {kind: "conversation"}, occurred_at: "<ISO timestamp>"}]}
 - session_end: expected {"s_…": 1}, data {session_id: "s_…"}
 - retract: expected {}, data {root_record_id, expected_effective_revision, reason}
 
