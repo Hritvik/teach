@@ -22,4 +22,25 @@ Start or resume a session and use whoami to orient to the current learner, conne
 Use log_inquiry to save a question; unresolved questions belong in the inbox. Record explanatory conversation as exposure, never as an assessed answer. Source verification and item authoring tools are not available in this release.
 Save only general-learning content. Employer material, secrets and private source documents are outside scope. Capture permissions cannot administer grants, enable paid inference, merge concepts or close goals through trusted confirmation.
 Use one stable request UUID and unchanged payload for each operation. A lost acknowledgement is uncertain; retry the same request to reconcile its receipt. Never report saved before acknowledgement. Explain pending, refused, conflict and unsaved states honestly.
+
+Write envelope — every write tool:
+- protocol_version: 1 and rules_version: 1
+- recovery_generation: the value returned by whoami
+- request_id: a fresh UUID; reuse it only to reconcile a retry
+- reason: a short explanation of the write
+- expected: record id → current version for entities being changed; {} when none
+- operation: the tool name
+- data: the tool-specific payload
+- session_id: top-level when the operation acts inside a session
+
+Examples:
+- session_start: expected {}, data {}
+- log_inquiry: session_id "s_…", expected {}, data {text, concept_ids: [], unresolved: true}
+- session_end: expected {"s_…": 1}, data {session_id: "s_…"}
+- retract: expected {}, data {root_record_id, expected_effective_revision, reason}
+
+A VERSION_CONFLICT names the current version. Reorient and retry with that version in expected; do not invent a new request id for the same payload. Destructive tools such as retract and concept_merge may require the client's confirmation.
+
+Read notes: history requires record_id and returns the correction/retraction history for that record, not a list of sessions. sessions lists sessions; inbox lists unresolved inquiries.
+
 The browser connection controls provide sign-in and revocation. Recovery, grading and review controls follow later. There is one hosted tracker; no local outbox or second learner database is part of this release.`;

@@ -15,10 +15,20 @@ are deliberately absent from the capture entrypoint.
 - Deploy config: `app/worker/wrangler.capture.jsonc`
 - Deployment record: `docs/superpowers/plans/2026-10-29-teach-capture-deployment.md`
 
-Owner sign-in is verified as of 2026-11-01: the Google callback completed, `/oauth/token` issued a
-`teach:read` grant, and live `whoami`, `sessions` and `inbox` calls returned successfully. A capture
-write journey (`session_start` → `log_inquiry` → reconnect) is still pending; treat writes as unproven
-until that round trip succeeds.
+Owner sign-in and the capture write path are verified as of 2026-11-01. A live ChatGPT session ran
+`session_start` → `log_inquiry` → `session_end` → `retract`; D1 recorded sequences 1–4, the session
+closed, the inquiry disappeared from the inbox, and the retraction remained in audit history. Reads
+from a new chat and `history` with a `record_id` both returned the expected records.
+
+Hosted-client notes:
+- After a scope change, remove and re-add the connector. Refreshing the tool list does not re-run OAuth
+  discovery.
+- Writes need the full envelope and the current entity versions in `expected`; `session_end` without
+  the session version fails with `VERSION_CONFLICT`.
+- `history` requires a `record_id`; it is not a session list.
+- `retract` and other destructive tools may require an explicit client confirmation.
+- Closed sessions cannot be deleted through the capture surface; the retraction suppresses the
+  inquiry but leaves the closed session as history.
 
 ## Read in this order
 

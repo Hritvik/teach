@@ -25,6 +25,22 @@ const input = z.strictObject({
   view: z.string().optional(), select: z.array(z.string()).optional(),
   filters: z.record(z.string(), z.unknown()).optional(),
 });
+const historyInput = z.strictObject({ record_id: z.string() });
+const readDescriptions: Record<string,string> = {
+  history: 'Read the correction and retraction history for one record. Requires record_id; this is not a session list.',
+  sessions: 'List learning sessions, newest first.',
+  inbox: 'List unresolved inquiries waiting in the inbox.',
+  frontier: 'Read the topics currently at the learning frontier.',
+  gaps: 'Read known gaps in the learning graph.',
+};
+const writeDescriptions: Record<string,string> = {
+  session_start: 'Start or resume a session. data may contain resume_session_id and goal_ids; expected is {}.',
+  session_end: 'Close a session. expected must include the session id and its current version; data requires session_id.',
+  log_inquiry: 'Save an inquiry. Put session_id at the top level; data requires text, concept_ids and unresolved.',
+  concept_upsert: 'Create or update a concept. Reuse an existing concept before proposing a duplicate.',
+  record: 'Record exposure or inquiry evidence. Assessed answers are unavailable in the capture release.',
+  retract: 'Withdraw an unassessed inquiry or exposure. data requires root_record_id, expected_effective_revision and reason. Destructive; the client may ask for confirmation.',
+};
 const envelope = {
   protocol_version: z.literal(1), rules_version: z.literal(1), recovery_generation: z.number().int().positive(),
   request_id: z.uuid(), reason: z.string().min(1).max(1024), expected: z.record(z.string(), z.number().int().positive()),
@@ -47,8 +63,10 @@ export function mcpHandler(db: D1Database, admission: Admission, options:McpOpti
     server.registerResource('tutor-protocol', 'teach://protocol', { mimeType: 'text/plain' }, async uri => ({
       contents: [{ uri: uri.href, mimeType: 'text/plain', text: instructions }],
     }));
-    for (const name of reads) server.registerTool(name, { description: `Read Teach ${name}; no state changes.`, inputSchema: input,
-      annotations: { readOnlyHint: true, destructiveHint: false } }, async args => {
+    for (const name of reads) {
+      const schema = name === 'history' ? historyInput : input;
+      server.registerTool(name, { description: readDescriptions[name] ?? `Read Teach ${name}; no state changes.`, inputSchema: schema as typeof input,
+        annotations: { readOnlyHint: true, destructiveHint: false } }, async (args: z.infer<typeof input>) => {
       if(captureOnly&&name==='query'&&args.view==='v_mastery')return output({ok:false,error:{code:'FORBIDDEN',message:'Assessment views are unavailable in the capture release',retryable:false},meta:{}});
       if(name==='budget_status'){
         const current=await repo.read('whoami',{},admission);
@@ -56,8 +74,9 @@ export function mcpHandler(db: D1Database, admission: Admission, options:McpOpti
       }
       if (name === 'protocol') return { content: [{ type: 'text', text: instructions }] };
       return output(await repo.read(name, args, admission));
-    });
-    for (const name of writes) server.registerTool(name, { description: `Apply ${name} with a stable request identity and version checks.`,
+      });
+    }
+    for (const name of writes) server.registerTool(name, { description: writeDescriptions[name] ?? `Apply ${name} with a stable request identity and version checks.`,
       inputSchema: z.strictObject({ ...envelope, operation: z.literal(name) }),
       annotations: { readOnlyHint: false, idempotentHint: true, destructiveHint: name === 'concept_merge' || name === 'retract' },
     }, async args => {

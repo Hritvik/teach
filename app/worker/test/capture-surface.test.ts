@@ -25,12 +25,18 @@ describe('capture-only MCP release', () => {
   it('advertises capture tools and omits deferred assessment/review/control operations', async () => {
     const client = await clientFor('capture');
     try {
-      const names = (await client.listTools()).tools.map(tool => tool.name);
+      const tools = (await client.listTools()).tools;
+      const names = tools.map(tool => tool.name);
       for (const name of ['session_start','log_inquiry','record','concept_upsert','set_aim','learner_notes','inbox']) expect(names).toContain(name);
       for (const name of ['anchor_capture','item_add','item_verify','item_next','answer','attempt_status','item_status','dispute_answer','budget_status','calibration','misconceptions','mastery','next','needs_you','concept_merge','goal_close']) expect(names).not.toContain(name);
+      expect(tools.find(tool => tool.name === 'history')?.inputSchema).toMatchObject({required:['record_id']});
+      expect(tools.find(tool => tool.name === 'session_end')?.description).toContain('expected');
+      expect(tools.find(tool => tool.name === 'retract')?.description).toContain('Destructive');
       const resource = JSON.stringify(await client.readResource({uri:'teach://protocol'}));
       expect(resource).toContain('capture-only');
       expect(resource).toContain('grading and spaced reviews are unavailable');
+      expect(resource).toContain('Write envelope');
+      expect(resource).toContain('history requires record_id');
       expect(JSON.stringify(await client.callTool({name:'protocol',arguments:{}}))).toContain('capture-only');
     } finally { await client.close(); }
   });
