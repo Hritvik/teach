@@ -88,3 +88,13 @@ records the reviewed source and bundle hashes, migration hashes and the operator
   OAuth test fails if it returns.
 - `~/repositories/gym-tracker` (MyFitnessGuide) is a reference baseline, not part of this repository.
   Do not modify it from Teach work.
+
+## Planning location
+
+Active maps, tickets, specs, designs and implementation plans live in
+`~/repositories/portfolio-planning`. Do not create new planning directories or planning documents
+in this repository.
+
+- Read `~/repositories/portfolio-planning/AGENTS.md` before planning.
+- Run `~/repositories/portfolio-planning/capabilities/work/task status` before claiming work.
+- Promote only accepted specs/ADRs here, under `docs/`; active planning stays central.
