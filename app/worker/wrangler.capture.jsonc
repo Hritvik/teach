@@ -62,7 +62,7 @@
     "OWNER_EMAIL": "hritvikdinkar@gmail.com",
     "GOOGLE_SUBJECT": "113203256942632895294",
     "GOOGLE_CLIENT_ID": "592006837183-ik7q279a09hhqnpupsksd1h18ctbf9u1.apps.googleusercontent.com",
-    "ACCESS_ISSUER": "https://late-frog-bfd8.cloudflareaccess.com",
+    "ACCESS_ISSUER": "https://team.cloudflareaccess.com",
     "ACCESS_AUDIENCE": "ebc7980b87b77b003c364b1c68b61a9fdfec09a932a8a123c519e1c1d300f311"
   }
 }

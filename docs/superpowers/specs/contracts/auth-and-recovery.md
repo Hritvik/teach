@@ -32,23 +32,23 @@ Teach still validates operation scopes. [Provider authorization reference](https
 
 ## Source-inspected MyFitnessGuide adaptation
 
-The existing repository is `/Users/hritvikdinkar/repositories/gym-tracker`; its public authorization page
+The existing repository is `~/repositories/gym-tracker`; its public authorization page
 names MyFitnessGuide. Read-only inspection establishes a reusable implementation shape, not proof of
 Teach compatibility:
 
-- [Google login helper](/Users/hritvikdinkar/repositories/gym-tracker/app/worker/src/google-oidc.ts:27)
+- [Google login helper](~/repositories/gym-tracker/app/worker/src/google-oidc.ts:27)
   defines Google authorization/token/JWKS endpoints, with state/nonce in the authorization request.
-- [ID-token checks](/Users/hritvikdinkar/repositories/gym-tracker/app/worker/src/google-oidc.ts:45)
+- [ID-token checks](~/repositories/gym-tracker/app/worker/src/google-oidc.ts:45)
   verify issuer, audience, RS256 signature and nonce; the exchange rejects absent/unverified email at line 78.
-- [OAuth callback](/Users/hritvikdinkar/repositories/gym-tracker/app/worker/src/oauth-entry.ts:125)
+- [OAuth callback](~/repositories/gym-tracker/app/worker/src/oauth-entry.ts:125)
   resumes library upstream state, verifies Google identity and creates a random `connectionId` in grant props.
-- [Provider configuration](/Users/hritvikdinkar/repositories/gym-tracker/app/worker/src/oauth-entry.ts:150)
+- [Provider configuration](~/repositories/gym-tracker/app/worker/src/oauth-entry.ts:150)
   selects `/mcp`, `/authorize`, `/oauth/token`, `/register`, CIMD, one-hour access and 30-day refresh TTLs.
-- [Public OAuth deployment](/Users/hritvikdinkar/repositories/gym-tracker/app/worker/wrangler.oauth.jsonc:1)
+- [Public OAuth deployment](~/repositories/gym-tracker/app/worker/wrangler.oauth.jsonc:1)
   separates OAuth KV and enables `global_fetch_strictly_public`; the
-  [browser deployment](/Users/hritvikdinkar/repositories/gym-tracker/app/worker/wrangler.jsonc:1) describes
+  [browser deployment](~/repositories/gym-tracker/app/worker/wrangler.jsonc:1) describes
   Access one-time-PIN control and same-origin API/assets. Its
-  [entry verifier](/Users/hritvikdinkar/repositories/gym-tracker/app/worker/src/index.ts:84) refuses missing
+  [entry verifier](~/repositories/gym-tracker/app/worker/src/index.ts:84) refuses missing
   Access config, and API paths do not fall through to public assets.
 
 Teach adopts direct Google login for MCP and Access OTP for trusted browser controls, with one-hour

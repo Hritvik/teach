@@ -27,3 +27,6 @@ logs/
 
 # Local agent workspaces
 .superpowers/
+
+# Agent scratch notes (local only)
+.scratch/

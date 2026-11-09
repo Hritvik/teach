@@ -2,6 +2,6 @@
 
 This plan now lives at:
 
-`/Users/hritvikdinkar/repositories/portfolio-planning/plans/teach/2026-10-26-teach-general-build.md`
+`~/repositories/portfolio-planning/plans/teach/2026-10-26-teach-general-build.md`
 
 Read and edit it there. This file is a pointer only.
